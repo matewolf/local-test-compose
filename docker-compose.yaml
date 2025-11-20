@@ -1,0 +1,39 @@
+services:
+  agent:
+    build:
+      context: ../agent
+    command:
+      - "agent"
+      - "--config"
+      - "/config.json"
+    working_dir: /home/matewolf/projects/agent
+    volumes:
+      - /host/proc:/proc
+      - /host/etc:/etc
+      - ../agent/config.json:/config.json
+    environment:
+      - HOST_PROC=/host/proc
+      - HOST_ETC=/host/etc
+    depends_on:
+      controlplane:
+        condition: service_healthy
+
+  controlplane:
+    build:
+      context: ../controlplane
+    working_dir: /home/matewolf/projects/controlplane
+    ports:
+      - "8443:8443"
+    command:
+      - "server"
+      - "--config"
+      - "/config.yaml"
+    volumes:
+      - ../controlplane/config.yaml:/config.yaml:ro
+    healthcheck:
+      interval: 30s
+      timeout: 180s
+      start_period: 30s
+      test: ["CMD", "curl", "-k", "-f", "https://localhost:8080/healthz"]
+
+
