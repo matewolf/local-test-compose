@@ -15,14 +15,23 @@ const server = http.createServer(async (req, res) => {
       const body = await fs.readFile(DATA_PATH, 'utf8');
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(body);
+      return;
     } catch (err) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: err.message }));
+      return;
     }
-  } else {
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('Not found');
   }
+
+  if (req.method === 'GET' && req.url === '/healthz') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'ok' }));
+    return;
+  }
+
+  res.writeHead(404, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ error: 'Not found' }));
+  return;
 });
 
 server.listen(PORT, () => {

@@ -1,0 +1,378 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: leightweight-loads
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: python-server-7000
+  namespace: leightweight-loads
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: python-server-7000
+  template:
+    metadata:
+      labels:
+        app: python-server-7000
+    spec:
+      containers:
+        - name: python-server-7000
+          image: python:3
+          command: ["python", "-m", "http.server", "7000"]
+          ports:
+            - containerPort: 7000
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 7000
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 7000
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: python-server-7000
+  namespace: leightweight-loads
+spec:
+  selector:
+    app: python-server-7000
+  ports:
+    - name: http
+      port: 7000
+      targetPort: 7000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: python-server-8000
+  namespace: leightweight-loads
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: python-server-8000
+  template:
+    metadata:
+      labels:
+        app: python-server-8000
+    spec:
+      containers:
+        - name: python-server-8000
+          image: python:3
+          command: ["python", "-m", "http.server", "8000"]
+          ports:
+            - containerPort: 8000
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8000
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8000
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: python-server-8000
+  namespace: leightweight-loads
+spec:
+  selector:
+    app: python-server-8000
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mock-assistant-creds
+  namespace: leightweight-loads
+data:
+  creds.json: |
+    {
+      "type": "service_account",
+      "project_id": "dummy-gcp-project",
+      "private_key_id": "1234567890abcdef1234567890abcdef12345678",
+      "private_key": "-----BEGIN PRIVATE KEY-----\nMIIBVgIBADANBgkqhkiG9w0BAQEFAASCAT8wggE7AgEAAkEAvDummyFakeKeyAbcdefgHiJklmnopq\nrstuvwxyz0123456789+/DUMMYKEYEXAMPLEEND=\n-----END PRIVATE KEY-----\n",
+      "client_email": "dummy-service-account@dummy-gcp-project.iam.gserviceaccount.com",
+      "client_id": "123456789012345678901",
+      "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+      "token_uri": "https://oauth2.googleapis.com/token",
+      "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+      "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/dummy-service-account%40dummy-gcp-project.iam.gserviceaccount.com"
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mock-assistant
+  namespace: leightweight-loads
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mock-assistant
+  template:
+    metadata:
+      labels:
+        app: mock-assistant
+    spec:
+      containers:
+        - name: mock-assistant
+          image: matewolf/mock-assistant:12021525
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DATA_PATH
+              value: /app/creds.json
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+      volumes:
+        - name: mock-assistant-creds
+          configMap:
+            name: mock-assistant-creds
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mock-assistant
+  namespace: leightweight-loads
+spec:
+  selector:
+    app: mock-assistant
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-https-fileserver
+  namespace: leightweight-loads
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: go-https-fileserver
+  template:
+    metadata:
+      labels:
+        app: go-https-fileserver
+    spec:
+      containers:
+        - name: go-https-fileserver
+          image: matewolf/file-server:12021525
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9000
+              name: http
+            - containerPort: 9100
+              name: http2
+            - containerPort: 9200
+              name: tcp
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 9000
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 9000
+              scheme: HTTPS
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: go-https-fileserver
+  namespace: leightweight-loads
+spec:
+  selector:
+    app: go-https-fileserver
+  ports:
+    - name: http
+      port: 9000
+      targetPort: 9000
+    - name: http2
+      port: 9100
+      targetPort: 9100
+    - name: tcp
+      port: 9200
+      targetPort: 9200
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: caller-script
+  namespace: leightweight-loads
+data:
+  caller.sh: |
+    #!/bin/sh
+
+    containers="python-server-7000 python-server-8000 go-https-fileserver mock-assistant echo"
+    # containers="mock-assistant"
+
+    usage() {
+      cat <<'EOF'
+    Usage: call-container.sh [container-name]
+
+    Options:
+      container-name   Optional. One of:
+                       python-server-7000 | python-server-8000 |
+                       go-https-fileserver | mock-assistant
+                       Defaults to a random choice if omitted.
+    EOF
+    }
+
+    if [ "${1-}" = "-h" ] || [ "${1-}" = "--help" ]; then
+      usage
+      exit 0
+    fi
+
+    requested_choice=${1-}
+
+    random_choice() {
+      count=0
+      for c in $containers; do
+        count=$((count + 1))
+      done
+
+      if command -v od >/dev/null 2>&1; then
+        rand=$(od -An -N2 -tu2 /dev/urandom 2>/dev/null | tr -d ' ')
+      else
+        rand=$(date +%s)
+      fi
+
+      idx=$((rand % count + 1))
+      i=1
+      for c in $containers; do
+        if [ "$i" -eq "$idx" ]; then
+          printf '%s\n' "$c"
+          return
+        fi
+        i=$((i + 1))
+      done
+    }
+
+    while :; do
+      if [ -n "$requested_choice" ]; then
+        choice=$requested_choice
+      else
+        choice=$(random_choice)
+      fi
+
+      case "$choice" in
+        python-server-7000)
+          echo "Calling '$choice' via curl..."
+          curl -v "http://python-server-7000:7000/"
+          ;;
+        python-server-8000)
+          echo "Calling '$choice' via curl..."
+          curl -v "http://python-server-8000:8000/"
+          ;;
+        go-https-fileserver)
+          echo "Calling '$choice' via curl..."
+          curl -v --insecure "https://go-https-fileserver:9000/"
+          ;;
+        mock-assistant)
+          echo "Calling '$choice' via curl..."
+          curl -v -H "Content-Type: application/json" \
+            -H "Connection: close" \
+            --data "{\"message\": \"Hello, how are you?\"}" \
+            "http://mock-assistant:3000/chat"
+          ;;
+        echo)
+          echo "Calling '$choice' via curl..."
+          curl -v --insecure "https://echo.free.beeceptor.com"
+          ;;
+        *)
+          echo "Unknown container: $choice" >&2
+          usage >&2
+          exit 1
+          ;;
+      esac
+
+      sleep 2
+    done
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: caller
+  namespace: leightweight-loads
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: caller
+  template:
+    metadata:
+      labels:
+        app: caller
+    spec:
+      containers:
+        - name: caller
+          image: curlimages/curl:latest
+          command: ["sh", "/app/caller.sh"]
+          volumeMounts:
+            - name: caller-script
+              mountPath: /app/caller.sh
+              subPath: caller.sh
+      volumes:
+        - name: caller-script
+          configMap:
+            name: caller-script
+

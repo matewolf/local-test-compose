@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# containers="python-server-7000 python-server-8000 go-https-fileserver mock-assistant echo"
-containers="mock-assistant"
+containers="python-server-7000 python-server-8000 go-https-fileserver mock-assistant echo"
+# containers="mock-assistant"
 
 usage() {
   cat <<'EOF'
