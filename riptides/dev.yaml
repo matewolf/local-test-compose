@@ -1,0 +1,192 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: token-bearer
+  namespace: riptides-system
+type: Opaque
+data:
+  token: ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnpkV0lpT2lJeE1qTTBOVFkzT0Rrd0lpd2libUZ0WlNJNklrcHZhRzRnUkc5bElpd2lZV1J0YVc0aU9uUnlkV1VzSW1saGRDSTZNVFV4TmpJek9UQXlNbjAuS01VRnNJRFRuRm15RzNuTWlHTTZIOUZORlVST2Yzd2g3U21xSnAtUVYzMA==
+---
+apiVersion: core.riptides.io/v1alpha1
+kind: CredentialSource
+metadata:
+  name: token-bearer-cs
+  namespace: riptides-system
+spec:
+  kubernetes:
+    type: BearerToken
+    secretRef:
+      name: token-bearer
+      key: token
+---
+apiVersion: core.riptides.io/v1alpha1
+kind: AgentGroup
+metadata:
+  namespace: riptides-system
+  name: selected-agentgroup
+spec:
+  # Required: Workload ID that follows the SPIFFE ID pattern
+  workloadID: "riptides/agentgroup/selected-agentgroup"
+  
+  # Required: Array of selectors to match agents
+  # Each selector is a google.protobuf.Struct (flexible key-value pairs)
+  selectors:
+    # Selector 1: Match agents with specific environment and role
+  - linuxos:name: "amazon"
+---
+apiVersion: core.riptides.io/v1alpha1
+kind: WorkloadIdentity
+metadata:
+  name: curl
+  namespace: riptides-system
+spec:
+  selectors:
+    - k8s:label:app: caller
+  workloadID: riptides/curl
+  scope:
+    # agentGroup:
+      # id: riptides/agent/jointoken-13123
+    agentGroup:
+      id: riptides/agentgroup/selected-agentgroup
+  connection:
+    tls:
+      mode: MUTUAL
+  egress:
+    - selectors:
+      - app: beeceptor
+      credentialName: token-bearer-curl-wc
+      connection:
+        tls:
+          intercept: true
+---
+apiVersion: core.riptides.io/v1alpha1
+kind: WorkloadIdentity
+metadata:
+  name: fileserver
+  namespace: riptides-system
+spec:
+  selectors:
+    - k8s:label:app: go-https-fileserver
+  workloadID: riptides/fileserver
+  scope:
+    # agent:
+      # id: riptides/agent/jointoken-13123
+    agentGroup:
+      id: riptides/agentgroup/selected-agentgroup
+  connection:
+    tls:
+      mode: MUTUAL
+---
+apiVersion: core.riptides.io/v1alpha1
+kind: WorkloadCredential
+metadata:
+  name: token-bearer-curl-wc
+  namespace: riptides-system
+spec:
+  workloadID: riptides/curl
+  credentialSource: token-bearer-cs
+---
+apiVersion: core.riptides.io/v1alpha1
+kind: Service
+metadata:
+  name: echo-service
+  namespace: riptides-system
+spec:
+  addresses:
+  - address: echo.free.beeceptor.com
+    port: 443
+    tags: ["echo", "beeceptor"]
+  labels:
+    app: beeceptor
+  external: true
+---
+apiVersion: core.riptides.io/v1alpha1
+kind: WorkloadIdentity
+metadata:
+  name: mock-assistant
+  namespace: riptides-system
+spec:
+  selectors:
+    - k8s:label:app: mock-assistant
+  workloadID: riptides/mock-assistant
+  scope:
+    # agent:
+      # id: riptides/agent/jointoken-13123
+    agentGroup:
+      id: riptides/agentgroup/selected-agentgroup
+  connection:
+    tls:
+      mode: MUTUAL
+---
+apiVersion: core.riptides.io/v1alpha1
+kind: WorkloadCredential
+metadata:
+  name: token-bearer-mock-assistant-wc
+  namespace: riptides-system
+spec:
+  workloadID: riptides/mock-assistant
+  credentialSource: token-bearer-cs
+# ---
+# apiVersion: core.riptides.io/v1alpha1
+# kind: Service
+# metadata:
+#   name: python-7000-service
+#   namespace: riptides-system
+# spec:
+#   addresses:
+#   - address: localhost
+#     port: 7000
+#     tags: ["python7000", "local"]
+#   - address: python-server-7000
+#     port: 7000
+#     tags: ["python7000", "docker"]
+#   labels:
+#     app: python7000
+# ---
+# apiVersion: core.riptides.io/v1alpha1
+# kind: Service
+# metadata:
+#   name: python-8000-service
+#   namespace: riptides-system
+# spec:
+#   addresses:
+#   - address: localhost
+#     port: 8000
+#     tags: ["python7000", "local"]
+#   - address: python-server-8000
+#     port: 8000
+#     tags: ["python8000", "docker"]
+#   labels:
+#     app: python8000
+# ---
+apiVersion: core.riptides.io/v1alpha1
+kind: Service
+metadata:
+  name: file-server-service
+  namespace: riptides-system
+spec:
+  addresses:
+  - address: localhost
+    port: 9000
+    tags: ["fileserver", "local"]
+  - address: go-https-fileserver
+    port: 9000
+    tags: ["fileserver", "docker"]
+  labels:
+    app: fileserver
+---
+apiVersion: core.riptides.io/v1alpha1
+kind: Service
+metadata:
+  name: chat-assistant-service
+  namespace: riptides-system
+spec:
+  addresses:
+  - address: localhost
+    port: 3000  
+    tags: ["chatassistant", "local"]
+  - address: mock-assistant
+    port: 3000
+    tags: ["chatassistant", "docker"]
+  labels:
+    app: chatassistant

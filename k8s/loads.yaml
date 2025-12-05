@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: leightweight-loads
+  name: lightweight-loads
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: python-server-7000
-  namespace: leightweight-loads
+  namespace: lightweight-loads
 spec:
   replicas: 1
   selector:
@@ -47,7 +47,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: python-server-7000
-  namespace: leightweight-loads
+  namespace: lightweight-loads
 spec:
   selector:
     app: python-server-7000
@@ -60,7 +60,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: python-server-8000
-  namespace: leightweight-loads
+  namespace: lightweight-loads
 spec:
   replicas: 1
   selector:
@@ -100,7 +100,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: python-server-8000
-  namespace: leightweight-loads
+  namespace: lightweight-loads
 spec:
   selector:
     app: python-server-8000
@@ -113,7 +113,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: mock-assistant-creds
-  namespace: leightweight-loads
+  namespace: lightweight-loads
 data:
   creds.json: |
     {
@@ -133,7 +133,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mock-assistant
-  namespace: leightweight-loads
+  namespace: lightweight-loads
 spec:
   replicas: 1
   selector:
@@ -146,7 +146,7 @@ spec:
     spec:
       containers:
         - name: mock-assistant
-          image: matewolf/mock-assistant:12021525
+          image: matewolf/mock-assistant:12031119
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
@@ -180,7 +180,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: mock-assistant
-  namespace: leightweight-loads
+  namespace: lightweight-loads
 spec:
   selector:
     app: mock-assistant
@@ -193,7 +193,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: go-https-fileserver
-  namespace: leightweight-loads
+  namespace: lightweight-loads
 spec:
   replicas: 1
   selector:
@@ -238,7 +238,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: go-https-fileserver
-  namespace: leightweight-loads
+  namespace: lightweight-loads
 spec:
   selector:
     app: go-https-fileserver
@@ -257,7 +257,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: caller-script
-  namespace: leightweight-loads
+  namespace: lightweight-loads
 data:
   caller.sh: |
     #!/bin/sh
@@ -352,7 +352,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: caller
-  namespace: leightweight-loads
+  namespace: lightweight-loads
 spec:
   replicas: 1
   selector:
