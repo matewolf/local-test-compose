@@ -190,3 +190,24 @@ spec:
     tags: ["chatassistant", "docker"]
   labels:
     app: chatassistant
+---
+apiVersion: core.riptides.io/v1alpha1
+kind: WorkloadIdentity
+metadata:
+  name: dummy-ingress-1
+  namespace: riptides-system
+spec:
+  selectors:
+    - k8s:label:app: dummy-ingress-1
+  workloadID: riptides/dummy-ingress-1
+  scope:
+    agentGroup:
+      id: riptides/agentgroup/selected-agentgroup
+  connection:
+    tls:
+      mode: MUTUAL
+  ingress:
+    - port: 8081
+      connection:
+        tls:
+          mode: MUTUAL
