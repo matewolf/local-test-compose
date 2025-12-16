@@ -35,7 +35,7 @@ spec:
     #   id: riptides/agentgroup/selected-agentgroup
   connection:
     tls:
-      mode: SIMPLE
+      mode: MUTUAL
   egress:
     - selectors:
       - app: beeceptor
@@ -43,6 +43,7 @@ spec:
       connection:
         tls:
           intercept: true
+          mode: SIMPLE
 ---
 apiVersion: core.riptides.io/v1alpha1
 kind: WorkloadIdentity
@@ -51,8 +52,26 @@ metadata:
   namespace: riptides-system
 spec:
   selectors:
-    - process:name: [file-server]
+    - process:name: [file-server, go-file-server]
   workloadID: riptides/fileserver
+  scope:
+    agent:
+      id: riptides/agent/jointoken-13123
+    # agentGroup:
+    #   id: riptides/agentgroup/selected-agentgroup
+  connection:
+    tls:
+      mode: MUTUAL
+---
+apiVersion: core.riptides.io/v1alpha1
+kind: WorkloadIdentity
+metadata:
+  name: wget
+  namespace: riptides-system
+spec:
+  selectors:
+    - process:name: [wget]
+  workloadID: riptides/wget
   scope:
     agent:
       id: riptides/agent/jointoken-13123
@@ -92,7 +111,7 @@ metadata:
   namespace: riptides-system
 spec:
   selectors:
-    - process:name: MainThread
+    - process:name: [MainThread, node]
   workloadID: riptides/mock-assistant
   scope:
     agent:

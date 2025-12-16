@@ -1,7 +1,7 @@
 #!/bin/sh
 
 containers="python-server-7000 python-server-8000 go-https-fileserver mock-assistant echo"
-# containers="mock-assistant"
+# ]containers="go-https-fileserver"
 
 usage() {
   cat <<'EOF'
@@ -55,22 +55,25 @@ while :; do
   case "$choice" in
     python-server-7000)
       echo "Calling '$choice' via curl..."
-      curl -v "http://python-server-7000:7000/"
+      # curl -v "http://python-server-7000:7000/"
+      curl -v "http://localhost:7000/"
       ;;
     python-server-8000)
       echo "Calling '$choice' via curl..."
-      curl -v "http://python-server-8000:8000/"
+      # curl -v "http://python-server-8000:8000/"
+      curl -v "http://localhost:8000/"
       ;;
     go-https-fileserver)
       echo "Calling '$choice' via curl..."
-      curl -v --insecure "https://go-https-fileserver:9000/"
+      # curl -v --insecure "https://go-https-fileserver:9000/"
+      curl -v --insecure "https://localhost:9000/"
       ;;
     mock-assistant)
       echo "Calling '$choice' via curl..."
       curl -v -H "Content-Type: application/json" \
         -H "Connection: close" \
         --data "{\"message\": \"Hello, how are you?\"}" \
-        "http://mock-assistant:3000/chat"
+        "http://localhost:3000/chat"
       ;;
     echo)
       echo "Calling '$choice' via curl..."

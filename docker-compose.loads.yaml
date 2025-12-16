@@ -1,9 +1,8 @@
 services:
   python-server-7000:
     image: python:3
+    network_mode: host
     command: python -m http.server 7000
-    ports:
-      - "7000:7000"
     healthcheck:
       test:
         - CMD
@@ -17,9 +16,8 @@ services:
 
   python-server-8000:
     image: python:3
+    network_mode: host
     command: python -m http.server 8000
-    ports:
-      - "8000:8000"
     healthcheck:
       test:
         - CMD
@@ -33,13 +31,10 @@ services:
 
   go-https-fileserver:
     image: golang:1.24.4
+    network_mode: host
     working_dir: /app
     command: >
       go run . -http-port 9000 -http2-port 9100 -tcp-port 9200 -tls
-    ports:
-      - "9000:9000"
-      - "9100:9100"
-      - "9200:9200"
     volumes:
       - ./file-server:/app
     healthcheck:
@@ -56,11 +51,10 @@ services:
 
   mock-assistant:
     image: node:20
+    network_mode: host
     command: node /app/mock-assistant.js
     volumes:
       - ./mock-assistant:/app
-    ports:
-      - "3000:3000"
     environment:
       - DATA_PATH=/app/creds.json
     healthcheck:
@@ -75,6 +69,7 @@ services:
 
   caller:
     image: curlimages/curl:latest
+    network_mode: host
     command: sh /app/caller.sh
     volumes:
       - ./caller:/app
